@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import netCDF4 as nc
 import collections
+from matplotlib.backends.backend_pdf import PdfPages
 
 
 def sum_monthly_flux_to_yearly(data):
@@ -792,8 +793,13 @@ def print_soil_table(outdir, stage, timeres, Y, X, timestep):
         else:
           data.append(ds.variables[v][timestep,il,Y,X])
     print row_fmt.format(*data)
+'''
+def somethingorother:
+    for i in array:
+        plot_site_compare_timeseries(CHANGINGVARLIST, output_dir, save_name)\
+'''
 
-def plot_site_compare_timeseries(varlist, output_dir, save_name):
+def plot_site_compare_timeseries(varlist, output_dirs, save_name, st, pixel):
   """
   Expects file names in output_dir to take the form 'var[0]'_'var[1]'_'stage'.nc'
   where var[0] is the name of the variable (e. g. 'SOC') and var[1] is the timestep
@@ -805,34 +811,32 @@ def plot_site_compare_timeseries(varlist, output_dir, save_name):
   """  
   
   var = varlist #example: [['SOC', 'monthly'], ['ALD', 'yearly'], ['GPP', 'monthly']]
-  varDir = output_dir #example: 'C:\Users\Public\Anaconda\Runs_ALLPFT\'
+  varDir = output_dirs #example: 'C:\Users\Public\Anaconda\Runs_ALLPFT\'
   pdf = PdfPages(save_name) #example: 'C:\Users\Public\Anaconda\Runs_AlLPFT\example-pdf.pdf'
-  stage = ['tr', 'sc']
   for whichVar in var:
-      for st in stage:
-          for outp in varDir:
-             curVar = nc.Dataset(outp+whichVar[0]+'_'+whichVar[1]+'_'+st+'.nc')  #this should result in curVar equaling a masked array from the output file
-             curVarARR = curVar.variables[whichVar[0]][:,0,0]
-             '''
-             Below I [simplistically] assume that if you have a monthly timestep,
-             you want to use sum_monthly_flux_to_yearly
-             In order to generalize this function further, I would suggest adding a third
-             element to each array in the varlist to determine which function to call
-             '''
-             if whichVar[1] == 'monthly':
-                 curVarARR = out.sum_monthly_flux_to_yearly(curVarARR)
-             plt.plot(curVarARR, label = outp[-11:-1]) #I named my directories with a four letter code for site and the CMT# as follows: SITE_CMT0#
-          curVarU = curVar.variables[whichVar[0]].units
-          whatCent = 'Years since'
-          if (st == 'tr'):
-             whatCent = whatCent + '1901'
-          else:
-             whatCent = whatCent + '2009'
-          plt.xlabel('Time ('+whatCent+')')
-          plt.ylabel(whichVar[0] + whichVar[1] +' (' + curVarU + ')')
-          plt.legend()
-          pdf.savefig()
-          plt.show()    
+      for outp in varDir:
+         curVar = nc.Dataset(outp+whichVar[0]+'_'+whichVar[1]+'_'+st+'.nc')  #this should result in curVar equaling a masked array from the output file
+         curVarARR = curVar.variables[whichVar[0]][:,0,0]
+         '''
+         Below I [simplistically] assume that if you have a monthly timestep,
+         you want to use sum_monthly_flux_to_yearly
+         In order to generalize this function further, I would suggest adding a third
+         element to each array in the varlist to determine which function to call
+         '''
+         if whichVar[1] == 'monthly':
+             curVarARR = out.sum_monthly_flux_to_yearly(curVarARR)
+         plt.plot(curVarARR, label = outp[-11:-1]) #I named my directories with a four letter code for site and the CMT# as follows: SITE_CMT0#
+      curVarU = curVar.variables[whichVar[0]].units
+      whatCent = 'Years since'
+      if (st == 'tr'):
+         whatCent = whatCent + '1901'
+      else:
+         whatCent = whatCent + '2009'
+      plt.xlabel('Time ('+whatCent+')')
+      plt.ylabel(whichVar[0] + whichVar[1] +' (' + curVarU + ')')
+      plt.legend()
+      pdf.savefig()
+      plt.show()    
   pdf.close()
 
 
@@ -930,6 +934,11 @@ if __name__ == '__main__':
   if args.command == 'site-compare':
     print "Not implemented yet..."
     print "Warn about conflicting arguments? Or about ignoring --yx argument??"
+    varlist = []
+    output_dirs = args.output_folder
+    for v in args.vars:
+        varlist.append([v, args.timeres])
+    plot_site_compare_timeseries(varlist, output_dirs, save_name=args.savename, st=args.stage, pixel=args.yx)
 
 
 '''

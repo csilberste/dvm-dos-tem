@@ -811,11 +811,11 @@ def plot_site_compare_timeseries(varlist, output_dirs, save_name, st, pixel):
   """  
   
   var = varlist #example: [['SOC', 'monthly'], ['ALD', 'yearly'], ['GPP', 'monthly']]
-  varDir = output_dirs #example: 'C:\Users\Public\Anaconda\Runs_ALLPFT\'
   pdf = PdfPages(save_name) #example: 'C:\Users\Public\Anaconda\Runs_AlLPFT\example-pdf.pdf'
   for whichVar in var:
-      for outp in varDir:
-         curVar = nc.Dataset(outp+whichVar[0]+'_'+whichVar[1]+'_'+st+'.nc')  #this should result in curVar equaling a masked array from the output file
+      for outp in output_dirs:  #example: 'C:\Users\Public\Anaconda\Runs_ALLPFT\'
+         filename = os.path.join(outp, (whichVar[0]+'_'+whichVar[1]+'_'+st+'.nc'))
+         curVar = nc.Dataset(filename)  #this should result in curVar equaling a masked array from the output file
          curVarARR = curVar.variables[whichVar[0]][:,0,0]
          '''
          Below I [simplistically] assume that if you have a monthly timestep,
@@ -824,7 +824,7 @@ def plot_site_compare_timeseries(varlist, output_dirs, save_name, st, pixel):
          element to each array in the varlist to determine which function to call
          '''
          if whichVar[1] == 'monthly':
-             curVarARR = out.sum_monthly_flux_to_yearly(curVarARR)
+             curVarARR = sum_monthly_flux_to_yearly(curVarARR)
          plt.plot(curVarARR, label = outp[-11:-1]) #I named my directories with a four letter code for site and the CMT# as follows: SITE_CMT0#
       curVarU = curVar.variables[whichVar[0]].units
       whatCent = 'Years since'
